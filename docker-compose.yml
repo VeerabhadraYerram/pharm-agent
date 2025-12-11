@@ -1,0 +1,24 @@
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"
+
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: pharma
+      POSTGRES_PASSWORD: pharma
+      POSTGRES_DB: pharma
+    ports:
+      - "5433:5432"
+
+  minio:
+    image: minio/minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9002:9000"
+      - "9003:9001"
