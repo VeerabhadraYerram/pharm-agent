@@ -1,1 +1,24 @@
 .DS_Store
+__pycache__/
+*.pyc
+.env
+.env.*
+/backend/.venv
+/backend/.venv/
+/backend/venv
+backend/.env
+backend/.env.*
+/backend/.mypy_cache
+/backend/.pytest_cache
+/backend/.ruff_cache
+.idea/
+.vscode/
+
+# security
+app/keys/
+*.pem
+*.key
+*.pub
+*.der
+*.crt
+backend/app/keys/
