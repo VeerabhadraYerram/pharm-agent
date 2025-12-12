@@ -1,10 +1,15 @@
 from logging.config import fileConfig
+import os
+import sys
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
 
+current_dir = os.path.dirname(os.path.realpath(__file__))
+backend_dir = os.path.abspath(os.path.join(current_dir, ".."))
+sys.path.append(backend_dir)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -19,7 +24,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from database import Base
+from master_agent.models.base import Base
 import master_agent.models.job
 target_metadata = Base.metadata
 

@@ -2,7 +2,7 @@ from sqlalchemy import String, DateTime, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
-from database import Base
+from master_agent.models.base import Base
 from datetime import datetime
 import uuid6
 import uuid
