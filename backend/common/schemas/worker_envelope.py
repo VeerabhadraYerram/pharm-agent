@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Any, List
 from datetime import datetime
 import uuid
@@ -18,5 +18,5 @@ class WorkerEnvelope(BaseModel):
     confidence: float
     timestamp: datetime
     outputs: Any    # worker specific
-    sources: List[WorkerSource]
+    sources: List[WorkerSource] = Field(default_factory=list)
     notes: str | None = None
