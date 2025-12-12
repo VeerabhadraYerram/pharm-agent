@@ -1,10 +1,7 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = "postgresql://pharma:pharma@localhost:5433/pharma"
-
-class Base(DeclarativeBase):
-    pass
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
