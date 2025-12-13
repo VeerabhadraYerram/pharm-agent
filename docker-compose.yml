@@ -1,24 +1,33 @@
 services:
   redis:
     image: redis:7
+    container_name: pharma_redis
     ports:
       - "6380:6379"
+    volumes:
+      - ./volumes/redis:/data
 
   postgres:
     image: postgres:14
+    container_name: pharma_postgres
     environment:
       POSTGRES_USER: pharma
       POSTGRES_PASSWORD: pharma
       POSTGRES_DB: pharma
     ports:
       - "5433:5432"
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
 
   minio:
     image: minio/minio
-    command: server /data
+    container_name: pharma_minio
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
     ports:
       - "9002:9000"
       - "9003:9001"
+    volumes:
+      - ./volumes/minio:/data
