@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List
-from canonical_result import TrialRecord
+from .canonical_result import TrialRecord
 
 
 class ClinicalTrialsOutputs(BaseModel):
