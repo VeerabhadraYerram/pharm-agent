@@ -2,8 +2,8 @@ import uuid
 import uuid6
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, JSON, Text, Float, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import ForeignKey, Text, Float, DateTime
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -37,10 +37,10 @@ class WorkerResponse(Base):
 
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True),nullable=False)
 
-    outputs: Mapped[dict] = mapped_column(JSON, nullable=False)
-    sources: Mapped[list] = mapped_column(JSON, nullable=False)
+    outputs: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    sources: Mapped[list] = mapped_column(JSONB, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    raw_envelope: Mapped[dict] = mapped_column(JSON, nullable=False)
+    raw_envelope: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
