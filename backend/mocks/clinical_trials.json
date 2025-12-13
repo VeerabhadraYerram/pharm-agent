@@ -1,0 +1,37 @@
+{
+  "trials": [
+    {
+      "id": "NCT001",
+      "title": "A Phase II Study of Drug A in Treatment of Condition X",
+      "phase": 2,
+      "status": "completed",
+      "conditions": ["Condition X"],
+      "intervention": ["Drug A"],
+      "sponsor": "PharmaCorp",
+      "start_date": "2019-05-13",
+      "completion_date": "2021-11-01"
+    },
+    {
+      "id": "NCT002",
+      "title": "A Phase III Randomized Controlled Trial of Drug A vs Placebo",
+      "phase": 3,
+      "status": "recruiting",
+      "conditions": ["Condition X"],
+      "intervention": ["Drug A"],
+      "sponsor": "GlobalTrials Inc",
+      "start_date": "2023-01-18",
+      "completion_date": null
+    },
+    {
+      "id": "NCT003",
+      "title": "Evaluating Drug B in Condition Y",
+      "phase": 1,
+      "status": "terminated",
+      "conditions": ["Condition Y"],
+      "intervention": ["Drug B"],
+      "sponsor": "BioHealth",
+      "start_date": "2017-08-10",
+      "completion_date": "2018-04-22"
+    }
+  ]
+}
