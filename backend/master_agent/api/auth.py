@@ -1,8 +1,12 @@
 from fastapi import Request, HTTPException, status
+from dotenv import load_dotenv
+import os
 
 
-API_KEY = "supersecret"
-WORKER_TOKEN = "workersecret"
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY")
+WORKER_TOKEN = os.getenv("WORKER_TOKEN")
 
 async def verify_api_key(request: Request):
     """
