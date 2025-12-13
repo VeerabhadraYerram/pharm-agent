@@ -1,37 +1,158 @@
-{
-  "trials": [
-    {
-      "id": "NCT001",
-      "title": "A Phase II Study of Drug A in Treatment of Condition X",
-      "phase": 2,
-      "status": "completed",
-      "conditions": ["Condition X"],
-      "intervention": ["Drug A"],
-      "sponsor": "PharmaCorp",
-      "start_date": "2019-05-13",
-      "completion_date": "2021-11-01"
-    },
-    {
-      "id": "NCT002",
-      "title": "A Phase III Randomized Controlled Trial of Drug A vs Placebo",
-      "phase": 3,
-      "status": "recruiting",
-      "conditions": ["Condition X"],
-      "intervention": ["Drug A"],
-      "sponsor": "GlobalTrials Inc",
-      "start_date": "2023-01-18",
-      "completion_date": null
-    },
-    {
-      "id": "NCT003",
-      "title": "Evaluating Drug B in Condition Y",
-      "phase": 1,
-      "status": "terminated",
-      "conditions": ["Condition Y"],
-      "intervention": ["Drug B"],
-      "sponsor": "BioHealth",
-      "start_date": "2017-08-10",
-      "completion_date": "2018-04-22"
-    }
-  ]
-}
+[
+  {
+    "nct_id": "NCT05671001",
+    "molecule": "CardioFlow-7",
+    "title": "Safety and Efficacy of CardioFlow-7 in Severe Hypertension",
+    "phase": "Phase 2",
+    "status": "Completed",
+    "condition": "Hypertension",
+    "start_date": "2021-03-10",
+    "end_date": "2022-08-15",
+    "results_summary": "Primary endpoint met. Significant reduction in systolic BP vs placebo. Mild dizziness reported in 5% of subjects.",
+    "sponsor": "Global Pharma Corp",
+    "region": "North America"
+  },
+  {
+    "nct_id": "NCT05671002",
+    "molecule": "CardioFlow-7",
+    "title": "Long-term Cardiovascular Outcomes of CardioFlow-7",
+    "phase": "Phase 3",
+    "status": "Recruiting",
+    "condition": "Hypertension",
+    "start_date": "2023-01-05",
+    "end_date": "2025-12-01",
+    "results_summary": null,
+    "sponsor": "Global Pharma Corp",
+    "region": "Europe"
+  },
+  {
+    "nct_id": "NCT05671003",
+    "molecule": "CardioFlow-7",
+    "title": "Exploratory Study of CardioFlow-7 for Migraine Prevention",
+    "phase": "Phase 1/2",
+    "status": "Completed",
+    "condition": "Migraine",
+    "start_date": "2022-06-01",
+    "end_date": "2023-01-20",
+    "results_summary": "Unexpected reduction in migraine frequency observed in hypertensive patients. Further investigation recommended.",
+    "sponsor": "University Medical Center",
+    "region": "North America"
+  },
+  {
+    "nct_id": "NCT05671004",
+    "molecule": "CardioFlow-7",
+    "title": "CardioFlow-7 in Pediatric Hypertension",
+    "phase": "Phase 1",
+    "status": "Terminated",
+    "condition": "Hypertension",
+    "start_date": "2022-09-01",
+    "end_date": "2022-11-15",
+    "results_summary": "Study terminated early due to poor enrollment. No safety concerns identified.",
+    "sponsor": "Global Pharma Corp",
+    "region": "North America"
+  },
+  {
+    "nct_id": "NCT09982001",
+    "molecule": "NeuroZ-12",
+    "title": "Efficacy of NeuroZ-12 in Refractory Epilepsy",
+    "phase": "Phase 3",
+    "status": "Completed",
+    "condition": "Epilepsy",
+    "start_date": "2019-04-12",
+    "end_date": "2021-05-30",
+    "results_summary": "Highly effective in reducing seizure frequency (45% reduction). FDA approved for adjunctive therapy.",
+    "sponsor": "NeuroTech Solutions",
+    "region": "Global"
+  },
+  {
+    "nct_id": "NCT09982002",
+    "molecule": "NeuroZ-12",
+    "title": "NeuroZ-12 for Management of Diabetic Neuropathy Pain",
+    "phase": "Phase 2",
+    "status": "Completed",
+    "condition": "Neuropathic Pain",
+    "start_date": "2022-02-10",
+    "end_date": "2023-03-15",
+    "results_summary": "Significant pain reduction scores on VAS scale compared to placebo. Side effect profile acceptable.",
+    "sponsor": "NeuroTech Solutions",
+    "region": "Europe"
+  },
+  {
+    "nct_id": "NCT09982003",
+    "molecule": "NeuroZ-12",
+    "title": "Study of NeuroZ-12 in Generalized Anxiety Disorder",
+    "phase": "Phase 2",
+    "status": "Recruiting",
+    "condition": "Anxiety",
+    "start_date": "2023-08-01",
+    "end_date": "2024-12-01",
+    "results_summary": null,
+    "sponsor": "BioHealth Institute",
+    "region": "Asia-Pacific"
+  },
+  {
+    "nct_id": "NCT09982004",
+    "molecule": "NeuroZ-12",
+    "title": "Dosing Study of NeuroZ-12 in Elderly Patients",
+    "phase": "Phase 1",
+    "status": "Completed",
+    "condition": "Healthy Volunteers",
+    "start_date": "2018-01-10",
+    "end_date": "2018-06-01",
+    "results_summary": "Pharmacokinetics indicate lower clearance in elderly. Dose adjustment required.",
+    "sponsor": "NeuroTech Solutions",
+    "region": "Europe"
+  },
+  {
+    "nct_id": "NCT01113001",
+    "molecule": "Immuno-X",
+    "title": "Immuno-X for Moderate to Severe Rheumatoid Arthritis",
+    "phase": "Phase 3",
+    "status": "Completed",
+    "condition": "Rheumatoid Arthritis",
+    "start_date": "2020-01-15",
+    "end_date": "2022-02-28",
+    "results_summary": "Standard of care efficacy met. Non-inferior to Humira.",
+    "sponsor": "Apex Biologics",
+    "region": "North America"
+  },
+  {
+    "nct_id": "NCT01113002",
+    "molecule": "Immuno-X",
+    "title": "Immuno-X in Crohn's Disease Maintenance",
+    "phase": "Phase 2",
+    "status": "Active, not recruiting",
+    "condition": "Crohn's Disease",
+    "start_date": "2022-05-10",
+    "end_date": "2024-05-10",
+    "results_summary": "Interim analysis shows promising mucosal healing rates.",
+    "sponsor": "Apex Biologics",
+    "region": "Europe"
+  },
+  {
+    "nct_id": "NCT01113003",
+    "molecule": "Immuno-X",
+    "title": "Topical Immuno-X for Psoriasis Plaques",
+    "phase": "Phase 1/2",
+    "status": "Suspended",
+    "condition": "Psoriasis",
+    "start_date": "2023-01-01",
+    "end_date": "2023-06-01",
+    "results_summary": "Suspended due to formulation stability issues. No safety events in patients.",
+    "sponsor": "Dermatology Partners",
+    "region": "Asia-Pacific"
+  },
+  {
+    "nct_id": "NCT01113004",
+    "molecule": "Immuno-X",
+    "title": "Immuno-X for Systemic Lupus Erythematosus (SLE)",
+    "phase": "Phase 2",
+    "status": "Withdrawn",
+    "condition": "Systemic Lupus Erythematosus",
+    "start_date": "2021-11-01",
+    "end_date": "2021-12-01",
+    "results_summary": "Withdrawn prior to enrollment due to strategic business decision.",
+    "sponsor": "Apex Biologics",
+    "region": "North America"
+  }
+]

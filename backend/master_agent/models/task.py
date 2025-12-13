@@ -3,9 +3,9 @@ import uuid6
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import ForeignKey, JSON, Integer, Text, text, DateTime
+from sqlalchemy import ForeignKey, Integer, Text, text, DateTime
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -26,7 +26,7 @@ class Task(Base):
     )
 
     worker_type: Mapped[str] = mapped_column(Text, nullable=False)
-    params: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    params: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
 
     status: Mapped[str] = mapped_column(
         Text,
