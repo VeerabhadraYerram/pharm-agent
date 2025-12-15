@@ -9,3 +9,7 @@ class ClinicalTrialsOutputs(BaseModel):
     research_confidence: float
     key_findings: List[str]
     suggested_follow_up: List[str]
+
+class ReportWorkerOutputs(BaseModel):
+    pdf_uri: str
+    ppt_uri: str
