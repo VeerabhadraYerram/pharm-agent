@@ -122,7 +122,7 @@ def run_report_worker(job_id: str, task_id: str, params: dict):
 
     # 2. generate files locally
     pdf_name = f"{job_id}_report.pdf"
-    ppt_name = f"{job_id}_slides.pdf"
+    ppt_name = f"{job_id}_slides.pptx"
 
     pdf_path = Path(f"/tmp/{pdf_name}")
     ppt_path = Path(f"/tmp/{ppt_name}")

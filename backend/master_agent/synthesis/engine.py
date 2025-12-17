@@ -2,7 +2,7 @@ import json
 import uuid
 
 from backend.common.llm.inference import llm_structured
-from backend.common.schemas.canonical_result import CanonicalResult
+from backend.common.schemas.canonical_result import CanonicalResult, SynthesisOutput
 from backend.common.schemas.worker_outputs import ClinicalTrialsOutputs
 
 def run_synthesis(
@@ -25,7 +25,8 @@ Your job is to analyze and synthesize clinical trial evidence for the molecule:
 You are given the normalized clinical trial dataset (JSON list):
 {trials_json}
 
-Your output MUST strictly follow the CanonicalResult schema.
+Your output MUST strictly follow the SynthesisOutput schema.
+Do NOT output the raw trials list. Just the analysis.
 
 -------------------------
 TASKS YOU MUST COMPLETE:
@@ -76,17 +77,29 @@ Return ONLY ONE JSON OBJECT.
 Do NOT wrap the result in a list or array.
 Do NOT return an array.
 Do NOT return multiple objects.
-Return exactly ONE dictionary matching the CanonicalResult schema.
+Return exactly ONE dictionary matching the SynthesisOutput schema.
 No markdown. No text. No code fences.
 
 Begin.
 """
     
-    canonical_result = llm_structured(
+    # 1. Get Analysis from LLM
+    analysis: SynthesisOutput = llm_structured(
         prompt=prompt,
-        schema=CanonicalResult,
+        schema=SynthesisOutput,
         job_id=job_id,
         stage="synthesis"
+    )
+
+    # 2. Construct Full Canonical Result (Data + Analysis)
+    canonical_result = CanonicalResult(
+        molecule=molecule,
+        trial_summary=analysis.trial_summary,
+        trials=ct_outputs.trials, # Pass through raw data without LLM touch
+        key_findings=analysis.key_findings,
+        suggested_follow_up=analysis.suggested_follow_up,
+        data_completeness_score=analysis.data_completeness_score,
+        confidence_overall=analysis.confidence_overall
     )
 
     return canonical_result

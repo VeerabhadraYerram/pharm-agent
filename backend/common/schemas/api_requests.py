@@ -4,6 +4,7 @@ import uuid
 
 class ResearchRequest(BaseModel):
     prompt: str
+    molecule: str
 
 class ResearchStatusResponse(BaseModel):
     job_id: uuid.UUID

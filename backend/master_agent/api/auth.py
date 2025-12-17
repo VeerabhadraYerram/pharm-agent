@@ -16,7 +16,6 @@ async def verify_api_key(request: Request):
 
     Requires header: X-API-Key: <API_KEY>
     """
-
     key = request.headers.get("X-API-Key")
     if key != API_KEY:
         raise HTTPException(

@@ -1,0 +1,85 @@
+from backend.celery_app import celery_app
+import uuid
+import uuid6
+from datetime import datetime, UTC
+from sqlalchemy.orm import Session
+
+from backend.database import SessionLocal
+from backend.master_agent.models.job import Job
+from backend.workers.clinical_trials.worker import run_clinical_trials_worker
+from backend.workers.report.worker import run_report_worker
+from backend.master_agent.synthesis.engine import run_synthesis
+from backend.common.schemas.worker_outputs import ClinicalTrialsOutputs
+from backend.common.schemas.canonical_result import CanonicalResult
+
+def _update_job_status(job_id: uuid.UUID, status: str, result: dict | None = None):
+    db: Session = SessionLocal()
+    try:
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job:
+            job.status = status
+            if result:
+                job.canonical_result = result
+            if status == "completed":
+                job.completed_at = datetime.now(UTC)
+            db.commit()
+    finally:
+        db.close()
+
+@celery_app.task(name="orchestration.conductor.run_research_workflow")
+def run_research_workflow(job_id_str: str, molecule: str):
+    """
+    The Main Conductor.
+    Executes the Prototype Flow: Clinical -> Synthesis -> Report
+    """
+    print(f"[Conductor] Starting Job {job_id_str} for {molecule}")
+    job_uuid = uuid.UUID(job_id_str)
+    
+    # 1. Update Status
+    _update_job_status(job_uuid, "running")
+
+    try:
+        # 2. Run Clinical Trials Worker (Sync call for simplicity in prototype)
+        # In prod, this would be .delay() and we'd wait for result
+        print("[Conductor] Running Clinical Trials Worker...")
+        ct_task_id = str(uuid6.uuid7())
+        ct_result_raw = run_clinical_trials_worker(
+            job_id=job_id_str,
+            task_id=ct_task_id,
+            params={"molecule": molecule}
+        )
+        
+        # Parse output
+        ct_outputs = ClinicalTrialsOutputs.model_validate(ct_result_raw["outputs"])
+        print(f"[Conductor] Clinical Trials Found: {len(ct_outputs.trials)}")
+
+        # 3. Run Synthesis (LLM)
+        print("[Conductor] Running Synthesis Engine...")
+        canonical_result: CanonicalResult = run_synthesis(
+            job_id=job_uuid,
+            molecule=molecule,
+            ct_outputs=ct_outputs
+        )
+        print(f"[Conductor] Synthesis Complete. Confidence: {canonical_result.confidence_overall}")
+
+        # 4. Save Synthesis Result to DB (so frontend can see text report)
+        _update_job_status(job_uuid, "generating_report", result=canonical_result.model_dump())
+
+        # 5. Run Report Worker (PDF/PPT)
+        print("[Conductor] Generating PDF/PPT artifacts...")
+        rep_task_id = str(uuid6.uuid7())
+        rep_result_raw = run_report_worker(
+            job_id=job_id_str,
+            task_id=rep_task_id,
+            params={"canonical_result": canonical_result.model_dump()}
+        )
+        print("[Conductor] Report Generation Complete.")
+
+        # 6. Final Completion
+        _update_job_status(job_uuid, "completed")
+        print(f"[Conductor] Job {job_id_str} Finished Successfully.")
+
+    except Exception as e:
+        print(f"[Conductor] Job Failed: {e}")
+        _update_job_status(job_uuid, "failed")
+        raise e
