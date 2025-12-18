@@ -1,144 +1,158 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { DocumentTextIcon, PresentationChartBarIcon, BeakerIcon } from '@heroicons/react/24/outline';
-import type { CanonicalResult } from '../types';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { ArrowDownTrayIcon, BeakerIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface ReportViewProps {
-    result?: CanonicalResult;
     jobId: string;
-    onReset: () => void;
 }
 
-export const ReportView: React.FC<ReportViewProps> = ({ result, jobId, onReset }) => {
-    if (!result) return null;
+export const ReportView: React.FC<ReportViewProps> = ({ jobId }) => {
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const poll = setInterval(() => {
+            axios.get(`/api/research/${jobId}/status`, {
+                headers: { 'X-API-KEY': 'supersecret' }
+            })
+                .then(res => {
+                    if (res.data.status === 'completed') {
+                        setData(res.data.canonical_result);
+                        setLoading(false);
+                        clearInterval(poll);
+                    } else if (res.data.status === 'failed') {
+                        setLoading(false);
+                        clearInterval(poll);
+                    }
+                });
+        }, 2000);
+
+        return () => clearInterval(poll);
+    }, [jobId]);
 
     const handleDownload = (type: 'pdf' | 'ppt') => {
-        // Direct link to our new proxy endpoint. 
-        // We use window.open to trigger download in separate tab (or same tab download).
-        const url = `http://127.0.0.1:8000/api/research/${jobId}/download/${type}`;
-        window.open(url, '_blank');
+        window.open(`/api/research/${jobId}/download/${type}`, '_blank');
     };
 
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center h-96 space-y-4 animate-pulse">
+            <BeakerIcon className="w-16 h-16 text-pharma-accent" />
+            <p className="text-slate-400">Synthesizing clinical evidence...</p>
+        </div>
+    );
+
+    if (!data) return <div className="text-red-400">Research Failed</div>;
+
+    // Prepare chart data
+    const trials = data.trials || [];
+
+    // Status Data
+    const statusCounts: Record<string, number> = {};
+    trials.forEach((t: any) => { statusCounts[t.status] = (statusCounts[t.status] || 0) + 1; });
+    const statusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+    // Phase Data
+    const phaseCounts: Record<string, number> = {};
+    trials.forEach((t: any) => { phaseCounts[t.phase] = (phaseCounts[t.phase] || 0) + 1; });
+    const phaseData = Object.entries(phaseCounts).map(([name, value]) => ({ name, value }));
+
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-6"
-        >
-            {/* Top Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-pharma-card p-6 rounded-xl border border-slate-700 shadow-lg">
-                    <p className="text-slate-400 text-sm font-medium">Confidence Score</p>
-                    <div className="flex items-end mt-2">
-                        <span className="text-4xl font-bold text-white">{Math.round((result.confidence_overall || 0) * 100)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-700 h-2 rounded-full mt-3 overflow-hidden">
-                        <div className="h-full bg-pharma-accent" style={{ width: `${(result.confidence_overall || 0) * 100}%` }}></div>
+        <div className="space-y-8 animate-fade-in">
+            {/* Header */}
+            <div className="flex justify-between items-start">
+                <div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                        Research Results: {data.molecule}
+                    </h2>
+                    <div className="flex space-x-4 mt-2 text-sm text-slate-400">
+                        <span>Confidence: {(data.confidence_overall * 100).toFixed(0)}%</span>
+                        <span>Data Completeness: {(data.data_completeness_score * 100).toFixed(0)}%</span>
                     </div>
                 </div>
-
-                <div className="bg-pharma-card p-6 rounded-xl border border-slate-700 shadow-lg">
-                    <p className="text-slate-400 text-sm font-medium">Data Completeness</p>
-                    <div className="flex items-end mt-2">
-                        <span className="text-4xl font-bold text-white">{Math.round((result.data_completeness_score || 0) * 100)}%</span>
-                    </div>
-                    <div className="w-full bg-slate-700 h-2 rounded-full mt-3 overflow-hidden">
-                        <div className="h-full bg-pharma-success" style={{ width: `${(result.data_completeness_score || 0) * 100}%` }}></div>
-                    </div>
-                </div>
-
-                <div className="bg-pharma-card p-6 rounded-xl border border-slate-700 shadow-lg">
-                    <p className="text-slate-400 text-sm font-medium">Trials Analyzed</p>
-                    <div className="flex items-center space-x-3 mt-2">
-                        <BeakerIcon className="w-8 h-8 text-pharma-warning" />
-                        <span className="text-4xl font-bold text-white">{result.trials.length}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left: Summary */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-pharma-card p-8 rounded-xl border border-slate-700 shadow-lg">
-                        <h3 className="text-xl font-semibold text-white mb-4">Executive Summary</h3>
-                        <div className="prose prose-invert max-w-none text-slate-300">
-                            {result.trial_summary?.split('\n').map((line, i) => (
-                                <p key={i}>{line}</p>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-pharma-card p-8 rounded-xl border border-slate-700 shadow-lg">
-                        <h3 className="text-xl font-semibold text-white mb-4">Key Findings</h3>
-                        <ul className="space-y-3">
-                            {result.key_findings.map((item, i) => (
-                                <li key={i} className="flex items-start space-x-3 text-slate-300">
-                                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-pharma-accent flex-shrink-0"></span>
-                                    <span>{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Right: Actions & Follow-up */}
-                <div className="space-y-6">
-                    <div className="bg-pharma-card p-6 rounded-xl border border-slate-700 shadow-lg">
-                        <h3 className="text-lg font-semibold text-white mb-4">Downloads</h3>
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => handleDownload('pdf')}
-                                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 transition-colors group"
-                            >
-                                <div className="flex items-center space-x-3">
-                                    <div className="p-2 bg-red-500/10 rounded-lg group-hover:bg-red-500/20">
-                                        <DocumentTextIcon className="w-6 h-6 text-red-500" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-medium text-white">Full Report</p>
-                                        <p className="text-xs text-slate-500">PDF Format</p>
-                                    </div>
-                                </div>
-                                {/* Placeholder action */}
-                            </button>
-
-                            <button
-                                onClick={() => handleDownload('ppt')}
-                                className="w-full flex items-center justify-between p-4 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-600 transition-colors group"
-                            >
-                                <div className="flex items-center space-x-3">
-                                    <div className="p-2 bg-orange-500/10 rounded-lg group-hover:bg-orange-500/20">
-                                        <PresentationChartBarIcon className="w-6 h-6 text-orange-500" />
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="font-medium text-white">Presentation</p>
-                                        <p className="text-xs text-slate-500">PowerPoint</p>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="bg-pharma-card p-6 rounded-xl border border-slate-700 shadow-lg">
-                        <h3 className="text-lg font-semibold text-white mb-4">Suggested Follow-Up</h3>
-                        <ul className="space-y-3">
-                            {result.suggested_follow_up.map((item, i) => (
-                                <li key={i} className="text-sm text-slate-400 border-l-2 border-slate-600 pl-3">
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
+                <div className="flex space-x-3">
                     <button
-                        onClick={onReset}
-                        className="w-full py-3 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-lg transition-all"
-                    >
-                        Start New Research
+                        onClick={() => handleDownload('pdf')}
+                        className="flex items-center space-x-2 px-4 py-2 bg-pharma-accent hover:bg-pharma-accent/80 rounded-lg text-black font-semibold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                        <ArrowDownTrayIcon className="w-5 h-5" />
+                        <span>PDF Report</span>
+                    </button>
+                    <button
+                        onClick={() => handleDownload('ppt')}
+                        className="flex items-center space-x-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-all">
+                        <ArrowDownTrayIcon className="w-5 h-5" />
+                        <span>Slides (PPTX)</span>
                     </button>
                 </div>
             </div>
-        </motion.div>
+
+            {/* Visual Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 bg-pharma-card rounded-xl border border-slate-700">
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                        <ChartBarIcon className="w-5 h-5 mr-2 text-pharma-accent" />
+                        Trial Status
+                    </h3>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={statusData}
+                                    cx="50%" cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value">
+                                    {statusData.map((_entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="p-6 bg-pharma-card rounded-xl border border-slate-700">
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                        <ChartBarIcon className="w-5 h-5 mr-2 text-pharma-accent" />
+                        Phase Distribution
+                    </h3>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={phaseData}>
+                                <XAxis dataKey="name" stroke="#94a3b8" />
+                                <YAxis stroke="#94a3b8" />
+                                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.1)' }} contentStyle={{ backgroundColor: '#1e293b', border: 'none' }} />
+                                <Bar dataKey="value" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </div>
+
+            {/* Key Findings */}
+            <div className="p-6 bg-pharma-card rounded-xl border border-slate-700">
+                <h3 className="text-xl font-bold text-white mb-4">Key Clinical Findings</h3>
+                <ul className="space-y-3">
+                    {data.key_findings.map((finding: string, i: number) => (
+                        <li key={i} className="flex items-start text-slate-300">
+                            <span className="mr-3 text-pharma-accent">•</span>
+                            {finding}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* Risk Assessment */}
+            {data.risk_assessment && (
+                <div className="p-6 bg-pharma-card rounded-xl border border-red-900/30">
+                    <h3 className="text-xl font-bold text-white mb-4">Risk Assessment</h3>
+                    <p className="text-slate-300 leading-relaxed">{data.risk_assessment}</p>
+                </div>
+            )}
+        </div>
     );
 };

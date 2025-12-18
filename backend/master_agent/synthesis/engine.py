@@ -64,7 +64,10 @@ TASKS YOU MUST COMPLETE:
    - populations that need more data
    - endpoints requiring deeper investigation
 
-6. **Provide an overall confidence score** (0 to 1) reflecting:
+6. **Assess Risks**:
+   - Provide a detailed Risk Assessment paragraph
+
+7. **Provide an overall confidence score** (0 to 1) reflecting:
    - quality of evidence
    - consistency across trials
    - robustness of results
@@ -99,7 +102,9 @@ Begin.
         key_findings=analysis.key_findings,
         suggested_follow_up=analysis.suggested_follow_up,
         data_completeness_score=analysis.data_completeness_score,
-        confidence_overall=analysis.confidence_overall
+        confidence_overall=analysis.confidence_overall,
+        swot_analysis=analysis.swot_analysis,
+        risk_assessment=analysis.risk_assessment
     )
 
     return canonical_result

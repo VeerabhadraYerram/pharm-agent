@@ -70,6 +70,21 @@ async def get_research_status(job_id: str, db: Session = Depends(get_db)):
         "created_at": job.created_at
     }
 
+@router.get("/api/jobs", dependencies=[Depends(verify_api_key)])
+async def get_all_jobs(db: Session = Depends(get_db)):
+    # Fetch all jobs, ordered by creation time descending
+    jobs = db.query(Job).order_by(Job.created_at.desc()).all()
+    
+    return [
+        {
+            "job_id": str(j.id),
+            "molecule": j.molecule,
+            "status": j.status,
+            "created_at": j.created_at
+        }
+        for j in jobs
+    ]
+
 from fastapi.responses import StreamingResponse
 from backend.common.storage.minio_client import minio_client
 

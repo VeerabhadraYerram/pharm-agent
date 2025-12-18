@@ -8,6 +8,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from pptx import Presentation
 from pptx.util import Inches
+import matplotlib.pyplot as plt
+import seaborn as sns
+import io
 
 from backend.common.storage import minio_client
 from backend.common.storage.minio_client import upload_file
@@ -16,53 +19,244 @@ from backend.common.schemas.worker_envelope import WorkerEnvelope, WorkerSource
 from backend.common.schemas.canonical_result import CanonicalResult
 
 
+
+# chart generation
+def generate_charts(result: CanonicalResult) -> dict:
+    # Generates in-memory chart images
+    charts = {}
+
+    # 1. Trial Status Distribution
+    statuses = [t.status for t in result.trials]
+    if statuses:
+        plt.figure(figsize=(6, 6))
+        # Count statuses
+        status_counts = {}
+        for s in statuses:
+            status_counts[s] = status_counts.get(s, 0) + 1
+        
+        plt.pie(status_counts.values(), labels=status_counts.keys(), autopct='%1.1f%%', colors=sns.color_palette('pastel'))
+        plt.title(f'Trial Status Distribution ({len(statuses)} Trials)')
+        
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        charts['status_pie'] = buf
+        plt.close()
+
+    # 2. Phase Distribution
+    phases = [t.phase for t in result.trials]
+    if phases:
+        plt.figure(figsize=(8, 5))
+        phase_counts = {}
+        for p in phases:
+            phase_counts[p] = phase_counts.get(p, 0) + 1
+            
+        sns.barplot(x=list(phase_counts.keys()), y=list(phase_counts.values()), palette='viridis')
+        plt.title('Trials by Phase')
+        plt.ylabel('Count')
+        
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        charts['phase_bar'] = buf
+        plt.close()
+
+    # 3. Top Conditions
+    conditions = [t.condition for t in result.trials]
+    if conditions:
+        plt.figure(figsize=(10, 6))
+        cond_counts = {}
+        for c in conditions:
+            cond_counts[c] = cond_counts.get(c, 0) + 1
+        
+        # Sort and take top 5
+        sorted_conds = sorted(cond_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        sns.barplot(x=[x[1] for x in sorted_conds], y=[x[0] for x in sorted_conds], palette='rocket')
+        plt.title('Top 5 Conditions Studied')
+        plt.xlabel('Count')
+        
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        charts['condition_bar'] = buf
+        plt.close()
+
+    return charts
+
 # pdf generation
+def draw_wrapped_text(c, text, x, y, max_width, line_height=14):
+    """
+    Helper to draw text wrapped within max_width.
+    Returns the new y position after drawing.
+    """
+    from reportlab.lib.utils import simpleSplit
+    # reportlab simpleSplit(text, fontName, fontSize, maxWidth)
+    lines = simpleSplit(text, c._fontname, c._fontsize, max_width)
+    for line in lines:
+        if y < 50: # Simple page break check (not fully robust for multi-page but safe for proto)
+            c.showPage()
+            y = 750
+            c.setFont("Helvetica", 12)
+        c.drawString(x, y, line)
+        y -= line_height
+    return y
+
 def generate_pdf(report_path: Path, result: CanonicalResult):
     
+    charts = generate_charts(result) # Generate charts first
+
     c = canvas.Canvas(
         str(report_path),
         pagesize=letter
     )
+    width, height = letter
+    max_width = width - 100 # 50px margin on each side
+
     y = 750
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(50, y, f"Evidence Report: {result.molecule}")
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(50, y, f"Pharma-Agent Comprehensive Report: {result.molecule}")
+    y -= 30
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawString(50, y, f"Generated on {datetime.now().strftime('%Y-%m-%d')}")
     y -= 40
-    c.setFont("Helvetica", 12)
 
-    # summary
-    c.drawString(50, y, "Summary: ")
+    # ---------------------------------------------------------
+    # SECTION 1: CLINICAL INTELLIGENCE (LIVE)
+    # ---------------------------------------------------------
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColorRGB(0, 0, 0.5) # Dark Blue
+    c.drawString(50, y, "1. CLINICAL INTELLIGENCE (Active)")
+    c.setFillColorRGB(0, 0, 0) # Reset
+    y -= 25
+    c.setFont("Helvetica", 10)
+    c.drawString(50, y, "Source: Clinical Trials Worker & Synthesis Engine")
     y -= 20
-    text_obj = c.beginText(50, y)
-    for line in result.trial_summary.split("\n"):
-        text_obj.textLine(line)
-    c.drawText(text_obj)
-    y = text_obj.getY() - 20
 
-    # key findings
-    c.drawString(50, y, "Key Findings:")
+    # Summary
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, y, "Executive Summary:")
     y -= 20
-    text_obj = c.beginText(50, y)
+    c.setFont("Helvetica", 10)
+    y = draw_wrapped_text(c, result.trial_summary, 50, y, max_width)
+    y -= 20
+
+    # Charts
+    if y < 300: c.showPage(); y = 750
+    
+    if 'status_pie' in charts:
+        c.drawImage(report_lab_image_reader(charts['status_pie']), 50, y - 180, width=180, height=180)
+    if 'phase_bar' in charts:
+        c.drawImage(report_lab_image_reader(charts['phase_bar']), 250, y - 180, width=250, height=160)
+    
+    if charts: y -= 200
+
+    if 'condition_bar' in charts:
+        if y < 200: c.showPage(); y = 750
+        c.drawImage(report_lab_image_reader(charts['condition_bar']), 100, y - 180, width=350, height=180)
+        y -= 200
+    
+    # Key Findings
+    if y < 100: c.showPage(); y = 750
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, y, "Key Clinical Findings:")
+    y -= 20
+    c.setFont("Helvetica", 10)
     for k in result.key_findings:
-        text_obj.textLine(f"• {k}")
-    c.drawText(text_obj)
-    y = text_obj.getY() - 20
+        y = draw_wrapped_text(c, f"• {k}", 50, y, max_width, line_height=12)
+    y -= 30
 
-    # follow-up
-    c.drawString(50, y, "Suggested Follow-Up:")
+    
     y -= 20
-    text_obj = c.beginText(50, y)
-    for s in result.suggested_follow_up:
-        text_obj.textLine(f"• {s}")
-    c.drawText(text_obj)
-    y = text_obj.getY() - 20
 
-    # scores
-    c.drawString(50, y, f"Data Completeness Score: {result.data_completeness_score}")
+    # ---------------------------------------------------------
+    # SECTION 2: MARKET INTELLIGENCE (PENDING)
+    # ---------------------------------------------------------
+    if y < 150: c.showPage(); y = 750
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColorRGB(0, 0, 0.5)
+    c.drawString(50, y, "2. MARKET INTELLIGENCE")
+    c.setFillColorRGB(0, 0, 0)
+    y -= 25
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawString(50, y, "Deployment Pending: Market Agent (Competitor Analysis, Pricing)")
     y -= 20
-    c.drawString(50, y, f"Confidence Overall: {result.confidence_overall}")
+
+    # Placeholder Box for Market Agent
+    c.setDash(1, 2)
+    c.rect(50, y-60, max_width, 60)
+    c.drawString(70, y-30, "Subject: Market Size, Competitor Pricing & Commercial Strategy")
+    c.drawString(70, y-45, "Status: Waiting for Market Agent module...")
+    c.setDash()
+    y -= 90
+
+    # ---------------------------------------------------------
+    # SECTION 3: REGULATORY & SAFETY
+    # ---------------------------------------------------------
+    if y < 150: c.showPage(); y = 750
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColorRGB(0, 0, 0.5)
+    c.drawString(50, y, "3. REGULATORY & SAFETY MONITORING")
+    c.setFillColorRGB(0, 0, 0)
+    y -= 25
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawString(50, y, "Deployment Pending: Web Worker (FDA Recalls, News Sentiment)")
+    y -= 20
+    
+    # Placeholder Box
+    c.setDash(1, 2)
+    c.rect(50, y-60, max_width, 60)
+    c.drawString(70, y-30, "Subject: Recent Safety Alerts & Media Sentiment Analysis")
+    c.drawString(70, y-45, "Status: Waiting for Web Worker module...")
+    c.setDash()
+    y -= 90
+
+    # ---------------------------------------------------------
+    # SECTION 4: INTELLECTUAL PROPERTY
+    # ---------------------------------------------------------
+    if y < 150: c.showPage(); y = 750
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColorRGB(0, 0, 0.5)
+    c.drawString(50, y, "4. INTELLECTUAL PROPERTY")
+    c.setFillColorRGB(0, 0, 0)
+    y -= 25
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawString(50, y, "Deployment Pending: Patent Agent (Expiry, Claims, Infringement)")
+    y -= 20
+    
+    c.setDash(1, 2)
+    c.rect(50, y-60, max_width, 60)
+    c.drawString(70, y-30, "Subject: Patent Expiry Timeline & Freedom-to-Operate")
+    c.drawString(70, y-45, "Status: Waiting for Patent Agent module...")
+    c.setDash()
+    y -= 90
+
+    # ---------------------------------------------------------
+    # SECTION 5: INTERNAL DATA CORRELATION
+    # ---------------------------------------------------------
+    if y < 150: c.showPage(); y = 750
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColorRGB(0, 0, 0.5)
+    c.drawString(50, y, "5. INTERNAL DATA CORRELATION")
+    c.setFillColorRGB(0, 0, 0)
+    y -= 25
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawString(50, y, "Deployment Pending: Internal Summarizer (Proprietary Data)")
+    y -= 20
+
+    c.setDash(1, 2)
+    c.rect(50, y-60, max_width, 60)
+    c.drawString(70, y-30, "Subject: Internal Lab Results & Historical Matches")
+    c.drawString(70, y-45, "Status: Waiting for Internal Summarizer module...")
+    c.setDash()
+    y -= 90
 
     c.showPage()
     c.save() 
+
+def report_lab_image_reader(buf):
+    from reportlab.lib.utils import ImageReader
+    return ImageReader(buf) 
 
 # ppt generation
 def generate_ppt(ppt_path: Path, result: CanonicalResult):
@@ -104,6 +298,49 @@ def generate_ppt(ppt_path: Path, result: CanonicalResult):
     body.text = "Suggested Follow-Up"
     for s in result.suggested_follow_up:
         body.add_paragraph().text = f"• {s}"
+
+    # Charts Slide
+    charts = generate_charts(result)
+    slide = prs.slides.add_slide(prs.slide_layouts[5]) # Blank
+    title = slide.shapes.title
+    title.text = "Trial Landscape"
+    
+    if 'status_pie' in charts:
+        slide.shapes.add_picture(charts['status_pie'], Inches(0.5), Inches(2), width=Inches(4))
+    if 'phase_bar' in charts:
+        slide.shapes.add_picture(charts['phase_bar'], Inches(5), Inches(2), width=Inches(4))
+
+    if 'condition_bar' in charts:
+        slide = prs.slides.add_slide(prs.slide_layouts[5]) 
+        title = slide.shapes.title
+        title.text = "Conditions Landscape"
+        slide.shapes.add_picture(charts['condition_bar'], Inches(2), Inches(2), width=Inches(6))
+
+    # SWOT Analysis Slide
+    if result.swot_analysis:
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        slide.shapes.title.text = "SWOT Analysis"
+        body = slide.shapes.placeholders[1].text_frame
+        for cat, items in result.swot_analysis.items():
+            p = body.add_paragraph()
+            p.text = cat.upper()
+            p.font.bold = True
+            for item in items[:2]:
+                body.add_paragraph().text = f"- {item}"
+
+    # Risk Assessment Slide
+    if result.risk_assessment:
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        slide.shapes.title.text = "Risk Assessment"
+        body = slide.shapes.placeholders[1].text_frame
+        body.text = result.risk_assessment
+
+    # Slide: Key Findings
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    body = slide.shapes.placeholders[1].text_frame
+    body.text = "Key Findings"
+    for k in result.key_findings:
+        body.add_paragraph().text = f"• {k}"
 
     prs.save(str(ppt_path))
 

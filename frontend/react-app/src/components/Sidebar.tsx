@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeIcon, ClockIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ClockIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 
 interface SidebarProps {
@@ -27,10 +27,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     <span className="font-medium">History</span>
                 </a>
 
-                <a href="#" className="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                {/* <a href="#" className="flex items-center space-x-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                     <Cog6ToothIcon className="w-6 h-6" />
                     <span className="font-medium">Settings</span>
-                </a>
+                </a> */}
             </nav>
 
             <div className="p-4 border-t border-slate-700">

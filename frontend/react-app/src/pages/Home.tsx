@@ -1,79 +1,109 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Layout } from '../components/Layout';
 import { NewResearch } from '../components/NewResearch';
 import { ResearchStatus } from '../components/ResearchStatus';
 import { ReportView } from '../components/ReportView';
-import { researchApi } from '../api/client';
-import type { CanonicalResult } from '../types';
+import { HistoryView } from '../components/HistoryView';
 
 export const Home: React.FC = () => {
-    const [view, setView] = useState<'new' | 'status' | 'report'>('new');
-    const [currentJobId, setCurrentJobId] = useState<string | null>(null);
-    const [result, setResult] = useState<CanonicalResult | undefined>(undefined);
-    const [isLoading, setIsLoading] = useState(false);
+    const [currentView, setCurrentView] = useState<'new' | 'status' | 'report' | 'history'>('new');
+    const [jobId, setJobId] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleStartResearch = async (molecule: string, prompt: string) => {
-        setIsLoading(true);
+    // Called when NewResearch form is submitted
+    const handleResearchSubmit = async (molecule: string, prompt: string) => {
+        setIsSubmitting(true);
         try {
-            const data = await researchApi.createJob(molecule, prompt);
-            setCurrentJobId(data.job_id);
-            setView('status');
-        } catch (e: any) {
-            console.error("Failed to start job", e);
-            if (axios.isAxiosError(e)) {
-                alert(`Error: ${e.message}\nStatus: ${e.response?.status}\nData: ${JSON.stringify(e.response?.data)}`);
-            } else {
-                alert(`Failed to start research job. Check backend connection.\n${e?.message || e}`);
-            }
+            const res = await axios.post('/api/research',
+                { molecule, prompt },
+                { headers: { 'X-API-KEY': 'supersecret' } }
+            );
+            setJobId(res.data.job_id);
+            setCurrentView('status');
+        } catch (err) {
+            console.error(err);
+            alert("Failed to start research");
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
-    const handleResearchComplete = (data: any) => {
-        if (data.status === 'completed') {
-            setResult(data.canonical_result);
-            setView('report');
-        } else {
-            // failed
-            alert("Research job failed.");
-            setView('new');
-        }
+    const handleNav = (view: 'new' | 'history') => {
+        setCurrentView(view);
     };
 
     return (
-        <Layout>
-            <div className="space-y-8">
-                {/* Header Section */}
-                <div className="flex flex-col space-y-2">
-                    <h1 className="text-3xl font-bold text-white">
-                        {view === 'new' ? 'Welcome, Researcher' :
-                            view === 'status' ? 'Research in Progress' :
-                                'Research Results'}
+        <div className="flex h-screen bg-pharma-dark text-slate-200 font-sans">
+            <div className="w-64 bg-pharma-card border-r border-slate-700 flex flex-col h-screen">
+                <div className="p-6 border-b border-slate-700">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-pharma-accent to-blue-500 bg-clip-text text-transparent">
+                        Pharm-Agent
                     </h1>
-                    <p className="text-slate-400">
-                        {view === 'new' ? 'Enter a molecule to begin autonomous clinical trial analysis.' :
-                            view === 'status' ? 'Our agents are mining, synthesizing, and generating reports.' :
-                                `Analysis complete for ${result?.molecule || 'Molecule'}.`}
-                    </p>
                 </div>
-
-                {/* View Switcher */}
-                <div className="min-h-[600px]">
-                    {view === 'new' && (
-                        <NewResearch onSubmit={handleStartResearch} isLoading={isLoading} />
-                    )}
-
-                    {view === 'status' && currentJobId && (
-                        <ResearchStatus jobId={currentJobId} onComplete={handleResearchComplete} />
-                    )}
-
-                    {view === 'report' && currentJobId && (
-                        <ReportView result={result} jobId={currentJobId} onReset={() => setView('new')} />
-                    )}
+                <nav className="flex-1 p-4 space-y-2">
+                    <button
+                        onClick={() => handleNav('new')}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${currentView === 'new' || currentView === 'status' || currentView === 'report' ? 'bg-pharma-accent/10 text-pharma-accent' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                        </svg>
+                        <span className="font-medium">Research Console</span>
+                    </button>
+                    <button
+                        onClick={() => handleNav('history')}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${currentView === 'history' ? 'bg-pharma-accent/10 text-pharma-accent' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-medium">History</span>
+                    </button>
+                </nav>
+                <div className="p-4 border-t border-slate-700">
+                    <div className="flex items-center space-x-3 px-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pharma-accent to-purple-500"></div>
+                        <div>
+                            <p className="text-sm font-medium text-white">Dr. Shiva</p>
+                            <p className="text-xs text-slate-500">Lead Researcher</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </Layout>
+
+            <main className="flex-1 overflow-auto">
+                <div className="max-w-7xl mx-auto p-8">
+                    {currentView === 'new' && (
+                        <div className="max-w-2xl mx-auto pt-10">
+                            <div className="mb-8">
+                                <h2 className="text-3xl font-bold text-white mb-2">New Research Job</h2>
+                                <p className="text-slate-400">
+                                    Initialize autonomous agents for clinical trial synthesis.
+                                </p>
+                            </div>
+                            <NewResearch
+                                onSubmit={handleResearchSubmit}
+                                isLoading={isSubmitting}
+                            />
+                        </div>
+                    )}
+
+                    {currentView === 'status' && (
+                        <div className="max-w-2xl mx-auto pt-20">
+                            <ResearchStatus
+                                jobId={jobId}
+                                onComplete={() => setCurrentView('report')}
+                            />
+                        </div>
+                    )}
+
+                    {currentView === 'report' && (
+                        <ReportView jobId={jobId} />
+                    )}
+
+                    {currentView === 'history' && (
+                        <HistoryView onSelectJob={(id) => { setJobId(id); setCurrentView('report'); }} />
+                    )}
+                </div>
+            </main>
+        </div>
     );
 };
