@@ -59,3 +59,4 @@ vine==5.1.0
 wcwidth==0.2.14
 xlsxwriter==3.2.9
 python-multipart
+orjson==3.9.10
