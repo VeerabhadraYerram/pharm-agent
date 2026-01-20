@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse
 import uuid6
 from sqlalchemy.orm import Session
 
@@ -52,7 +52,7 @@ async def create_research_job(
     except Exception as e:
         print(f"ERROR: {e}")
         traceback.print_exc()
-        return JSONResponse(
+        return ORJSONResponse(
             status_code=500,
             content={"error": str(e), "traceback": traceback.format_exc()}
         )
