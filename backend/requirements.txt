@@ -60,3 +60,4 @@ wcwidth==0.2.14
 xlsxwriter==3.2.9
 python-multipart
 orjson==3.9.10
+duckduckgo-search==7.2.1
