@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Any, Optional
 from .canonical_result import TrialRecord
 
 
@@ -13,3 +13,10 @@ class ClinicalTrialsOutputs(BaseModel):
 class ReportWorkerOutputs(BaseModel):
     pdf_uri: str
     ppt_uri: str
+
+class MarketIntelligenceOutputs(BaseModel):
+    market_size: Optional[str] = None
+    competitors: List[Dict[str, Any]] = []
+    patent_status: Optional[str] = None
+    pricing_insights: Optional[str] = None
+    key_findings: List[str] = []

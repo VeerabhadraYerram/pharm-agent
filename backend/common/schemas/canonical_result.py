@@ -22,6 +22,7 @@ class CanonicalResult(BaseModel):
     # New Fields
     swot_analysis: Optional[Dict[str, List[str]]] = None
     risk_assessment: Optional[str] = None
+    market_data: Optional[Dict[str, Any]] = None
     
     synthesis_version: str = "0.2.0"
 
@@ -34,3 +35,4 @@ class SynthesisOutput(BaseModel):
     confidence_overall: float
     swot_analysis: Dict[str, List[str]]
     risk_assessment: str
+    market_data: Optional[Dict[str, Any]] = None
