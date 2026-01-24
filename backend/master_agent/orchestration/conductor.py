@@ -6,10 +6,8 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.master_agent.models.job import Job
-from backend.workers.clinical_trials.worker import run_clinical_trials_worker
-from backend.workers.report.worker import run_report_worker
-from backend.master_agent.synthesis.engine import run_synthesis
-from backend.common.schemas.worker_outputs import ClinicalTrialsOutputs
+from backend.workers.market_worker.worker import run_market_worker
+from backend.common.schemas.worker_outputs import ClinicalTrialsOutputs, MarketIntelligenceOutputs
 from backend.common.schemas.canonical_result import CanonicalResult
 
 def _update_job_status(job_id: uuid.UUID, status: str, result: dict | None = None):
@@ -53,12 +51,23 @@ def run_research_workflow(job_id_str: str, molecule: str):
         ct_outputs = ClinicalTrialsOutputs.model_validate(ct_result_raw["outputs"])
         print(f"[Conductor] Clinical Trials Found: {len(ct_outputs.trials)}")
 
-        # 3. Run Synthesis (LLM)
+        # 3. Run Market Intelligence Worker
+        print("[Conductor] Running Market Intelligence Worker...")
+        market_task_id = str(uuid6.uuid7())
+        market_result_raw = run_market_worker(
+            job_id=job_id_str,
+            task_id=market_task_id,
+            params={"molecule": molecule}
+        )
+        market_outputs = MarketIntelligenceOutputs.model_validate(market_result_raw["outputs"])
+
+        # 4. Run Synthesis (LLM)
         print("[Conductor] Running Synthesis Engine...")
         canonical_result: CanonicalResult = run_synthesis(
             job_id=job_uuid,
             molecule=molecule,
-            ct_outputs=ct_outputs
+            ct_outputs=ct_outputs,
+            market_outputs=market_outputs
         )
         print(f"[Conductor] Synthesis Complete. Confidence: {canonical_result.confidence_overall}")
 

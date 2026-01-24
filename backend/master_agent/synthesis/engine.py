@@ -3,12 +3,13 @@ import uuid
 
 from backend.common.llm.inference import llm_structured
 from backend.common.schemas.canonical_result import CanonicalResult, SynthesisOutput
-from backend.common.schemas.worker_outputs import ClinicalTrialsOutputs
+from backend.common.schemas.worker_outputs import ClinicalTrialsOutputs, MarketIntelligenceOutputs
 
 def run_synthesis(
         job_id: uuid.UUID,
         molecule: str,
-        ct_outputs: ClinicalTrialsOutputs
+        ct_outputs: ClinicalTrialsOutputs,
+        market_outputs: MarketIntelligenceOutputs
 ) -> CanonicalResult:
     # take raw clinical trial output, produce structured CanonicalResult
 
@@ -24,6 +25,9 @@ Your job is to analyze and synthesize clinical trial evidence for the molecule:
 
 You are given the normalized clinical trial dataset (JSON list):
 {trials_json}
+
+You are also given the market and competitor intelligence data:
+{market_outputs.model_dump_json(indent=2)}
 
 Your output MUST strictly follow the SynthesisOutput schema.
 Do NOT output the raw trials list. Just the analysis.
@@ -104,7 +108,8 @@ Begin.
         data_completeness_score=analysis.data_completeness_score,
         confidence_overall=analysis.confidence_overall,
         swot_analysis=analysis.swot_analysis,
-        risk_assessment=analysis.risk_assessment
+        risk_assessment=analysis.risk_assessment,
+        market_data=market_outputs.model_dump()
     )
 
     return canonical_result

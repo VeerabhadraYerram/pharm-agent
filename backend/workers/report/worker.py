@@ -170,66 +170,28 @@ def generate_pdf(report_path: Path, result: CanonicalResult):
     y -= 20
 
     # ---------------------------------------------------------
-    # SECTION 2: MARKET INTELLIGENCE (PENDING)
+    # SECTION 2: MARKET INTELLIGENCE (Active)
     # ---------------------------------------------------------
     if y < 150: c.showPage(); y = 750
     c.setFont("Helvetica-Bold", 14)
     c.setFillColorRGB(0, 0, 0.5)
-    c.drawString(50, y, "2. MARKET INTELLIGENCE")
+    c.drawString(50, y, "2. MARKET INTELLIGENCE (Active)")
     c.setFillColorRGB(0, 0, 0)
     y -= 25
-    c.setFont("Helvetica-Oblique", 10)
-    c.drawString(50, y, "Deployment Pending: Market Agent (Competitor Analysis, Pricing)")
+    c.setFont("Helvetica", 10)
+    c.drawString(50, y, f"Market Size: {result.market_data.get('market_size', 'N/A') if result.market_data else 'N/A'}")
     y -= 20
-
-    # Placeholder Box for Market Agent
-    c.setDash(1, 2)
-    c.rect(50, y-60, max_width, 60)
-    c.drawString(70, y-30, "Subject: Market Size, Competitor Pricing & Commercial Strategy")
-    c.drawString(70, y-45, "Status: Waiting for Market Agent module...")
-    c.setDash()
-    y -= 90
-
-    # ---------------------------------------------------------
-    # SECTION 3: REGULATORY & SAFETY
-    # ---------------------------------------------------------
-    if y < 150: c.showPage(); y = 750
-    c.setFont("Helvetica-Bold", 14)
-    c.setFillColorRGB(0, 0, 0.5)
-    c.drawString(50, y, "3. REGULATORY & SAFETY MONITORING")
-    c.setFillColorRGB(0, 0, 0)
+    c.drawString(50, y, f"Patent Status: {result.market_data.get('patent_status', 'N/A') if result.market_data else 'N/A'}")
     y -= 25
-    c.setFont("Helvetica-Oblique", 10)
-    c.drawString(50, y, "Deployment Pending: Web Worker (FDA Recalls, News Sentiment)")
-    y -= 20
     
-    # Placeholder Box
-    c.setDash(1, 2)
-    c.rect(50, y-60, max_width, 60)
-    c.drawString(70, y-30, "Subject: Recent Safety Alerts & Media Sentiment Analysis")
-    c.drawString(70, y-45, "Status: Waiting for Web Worker module...")
-    c.setDash()
-    y -= 90
-
-    # ---------------------------------------------------------
-    # SECTION 4: INTELLECTUAL PROPERTY
-    # ---------------------------------------------------------
-    if y < 150: c.showPage(); y = 750
-    c.setFont("Helvetica-Bold", 14)
-    c.setFillColorRGB(0, 0, 0.5)
-    c.drawString(50, y, "4. INTELLECTUAL PROPERTY")
-    c.setFillColorRGB(0, 0, 0)
-    y -= 25
-    c.setFont("Helvetica-Oblique", 10)
-    c.drawString(50, y, "Deployment Pending: Patent Agent (Expiry, Claims, Infringement)")
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, y, "Competitor Landscape:")
     y -= 20
-    
-    c.setDash(1, 2)
-    c.rect(50, y-60, max_width, 60)
-    c.drawString(70, y-30, "Subject: Patent Expiry Timeline & Freedom-to-Operate")
-    c.drawString(70, y-45, "Status: Waiting for Patent Agent module...")
-    c.setDash()
-    y -= 90
+    c.setFont("Helvetica", 10)
+    market_findings = result.market_data.get('key_findings', []) if result.market_data else []
+    for finding in market_findings:
+        y = draw_wrapped_text(c, f"• {finding}", 50, y, max_width, line_height=12)
+    y -= 30
 
     # ---------------------------------------------------------
     # SECTION 5: INTERNAL DATA CORRELATION
