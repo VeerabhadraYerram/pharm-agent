@@ -198,6 +198,16 @@ export const ReportView: React.FC<ReportViewProps> = ({ jobId }) => {
                 </div>
             )}
 
+            {/* Risk Assessment */}
+            {data.risk_assessment && (
+                <div className="p-6 bg-pharma-card rounded-xl border border-red-900/30">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                        <BeakerIcon className="w-6 h-6 mr-2 text-red-400" />
+                        Strategic Risk Assessment
+                    </h3>
+                    <p className="text-slate-300 leading-relaxed italic">"{data.risk_assessment}"</p>
+                </div>
+            )}
         </div>
     );
 };
