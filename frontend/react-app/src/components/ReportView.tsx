@@ -146,13 +146,58 @@ export const ReportView: React.FC<ReportViewProps> = ({ jobId }) => {
                 </ul>
             </div>
 
-            {/* Risk Assessment */}
-            {data.risk_assessment && (
-                <div className="p-6 bg-pharma-card rounded-xl border border-red-900/30">
-                    <h3 className="text-xl font-bold text-white mb-4">Risk Assessment</h3>
-                    <p className="text-slate-300 leading-relaxed">{data.risk_assessment}</p>
+            {/* Market Intelligence */}
+            {data.market_data && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-6 bg-pharma-card rounded-xl border border-slate-700">
+                        <h3 className="text-xl font-bold text-white mb-4">Commercial Landscape</h3>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-3 bg-slate-800/50 rounded-lg">
+                                    <p className="text-xs text-slate-400 uppercase tracking-wider">Market Size (Global)</p>
+                                    <p className="text-lg font-semibold text-pharma-accent">{data.market_data.market_size_global || 'N/A'}</p>
+                                </div>
+                                <div className="p-3 bg-slate-800/50 rounded-lg">
+                                    <p className="text-xs text-slate-400 uppercase tracking-wider">TAM</p>
+                                    <p className="text-lg font-semibold text-white">{data.market_data.tam || 'N/A'}</p>
+                                </div>
+                                <div className="p-3 bg-slate-800/50 rounded-lg">
+                                    <p className="text-xs text-slate-400 uppercase tracking-wider">SAM</p>
+                                    <p className="text-lg font-semibold text-white">{data.market_data.sam || 'N/A'}</p>
+                                </div>
+                                <div className="p-3 bg-slate-800/50 rounded-lg">
+                                    <p className="text-xs text-slate-400 uppercase tracking-wider">SOM</p>
+                                    <p className="text-lg font-semibold text-white">{data.market_data.som || 'N/A'}</p>
+                                </div>
+                            </div>
+                            {data.market_data.trend_analysis && (
+                                <div className="mt-4">
+                                    <p className="text-xs text-slate-400 uppercase mb-1">Trend Analysis</p>
+                                    <p className="text-sm text-slate-300">{data.market_data.trend_analysis}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="p-6 bg-pharma-card rounded-xl border border-slate-700">
+                        <h3 className="text-xl font-bold text-white mb-4">Competitor Breakdown</h3>
+                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                            {data.market_data.competitors?.map((comp: any, i: number) => (
+                                <div key={i} className="p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="font-semibold text-white">{comp.name}</span>
+                                        <span className="text-xs px-2 py-0.5 bg-pharma-accent/20 text-pharma-accent rounded-full">
+                                            {(comp.confidence_score * 100).toFixed(0)}% Conf.
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-400">{comp.market_share || 'Market share unknown'}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
+
         </div>
     );
 };
