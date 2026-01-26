@@ -9,6 +9,7 @@ class WorkerSource(BaseModel):
     title: str | None = None
     uri: str | None = None
     retrieved_at: datetime | None = None
+    latency_ms: float | None = None
 
 class WorkerEnvelope(BaseModel):
     job_id: uuid.UUID
@@ -19,4 +20,5 @@ class WorkerEnvelope(BaseModel):
     timestamp: datetime
     outputs: Any    # worker specific
     sources: List[WorkerSource] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     notes: str | None = None
