@@ -38,7 +38,7 @@ The system follows a modern microservices pattern:
 *   **Database**: PostgreSQL 14
 *   **Storage**: MinIO (S3 compatible)
 *   **AI/ML**: LangChain, OpenAI API integration
-*   **Containerization**: Docker, Docker Compose
+*   **Containerization**: Docker and Docker Compose
 
 ## Getting Started
 
