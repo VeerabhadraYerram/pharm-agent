@@ -10,6 +10,17 @@ class TrialRecord(BaseModel):
     region: Optional[str] = None
     results_summary: Optional[str] = None
 
+class PatentRecord(BaseModel):
+    patent_id: str
+    title: str
+    assignee: Optional[str] = None
+    status: str
+    filing_date: Optional[str] = None
+    summary: Optional[str] = None
+
+class PatentOutputs(BaseModel):
+    patents: List[PatentRecord] = Field(default_factory=list)
+
 class CanonicalResult(BaseModel):
     molecule: str
     trial_summary: Optional[str] = None
@@ -23,6 +34,7 @@ class CanonicalResult(BaseModel):
     swot_analysis: Optional[Dict[str, List[str]]] = None
     risk_assessment: Optional[str] = None
     market_data: Optional[Dict[str, Any]] = None
+    patent_data: Optional[Dict[str, Any]] = None # Added Patent Data
     
     synthesis_version: str = "0.2.0"
 
@@ -36,3 +48,4 @@ class SynthesisOutput(BaseModel):
     swot_analysis: Dict[str, List[str]]
     risk_assessment: str
     market_data: Optional[Dict[str, Any]] = None
+    patent_data: Optional[Dict[str, Any]] = None
