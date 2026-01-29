@@ -7,8 +7,14 @@ from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.master_agent.models.job import Job
 from backend.workers.market_worker.worker import run_market_worker
+# NEW: Import other workers
+from backend.workers.clinical_trials.worker import run_clinical_trials_worker
+from backend.workers.patent_worker.worker import run_patent_worker
+from backend.workers.report.worker import run_report_worker
+from backend.master_agent.synthesis.engine import run_synthesis
+
 from backend.common.schemas.worker_outputs import ClinicalTrialsOutputs, MarketIntelligenceOutputs
-from backend.common.schemas.canonical_result import CanonicalResult
+from backend.common.schemas.canonical_result import CanonicalResult, PatentOutputs
 
 def _update_job_status(job_id: uuid.UUID, status: str, result: dict | None = None):
     db: Session = SessionLocal()
@@ -28,7 +34,7 @@ def _update_job_status(job_id: uuid.UUID, status: str, result: dict | None = Non
 def run_research_workflow(job_id_str: str, molecule: str):
     """
     The Main Conductor.
-    Executes the Prototype Flow: Clinical -> Synthesis -> Report
+    Executes the Prototype Flow: Clinical -> Patent -> Market -> Synthesis -> Report
     """
     print(f"[Conductor] Starting Job {job_id_str} for {molecule}")
     job_uuid = uuid.UUID(job_id_str)
@@ -37,8 +43,7 @@ def run_research_workflow(job_id_str: str, molecule: str):
     _update_job_status(job_uuid, "running")
 
     try:
-        # 2. Run Clinical Trials Worker (Sync call for simplicity in prototype)
-        # In prod, this would be .delay() and we'd wait for result
+        # 2. Run Clinical Trials Worker
         print("[Conductor] Running Clinical Trials Worker...")
         ct_task_id = str(uuid6.uuid7())
         ct_result_raw = run_clinical_trials_worker(
@@ -46,12 +51,21 @@ def run_research_workflow(job_id_str: str, molecule: str):
             task_id=ct_task_id,
             params={"molecule": molecule}
         )
-        
-        # Parse output
         ct_outputs = ClinicalTrialsOutputs.model_validate(ct_result_raw["outputs"])
         print(f"[Conductor] Clinical Trials Found: {len(ct_outputs.trials)}")
 
-        # 3. Run Market Intelligence Worker
+        # 3. NEW: Run Patent Worker
+        print("[Conductor] Running Patent Worker...")
+        pat_task_id = str(uuid6.uuid7())
+        pat_result_raw = run_patent_worker(
+            job_id=job_id_str,
+            task_id=pat_task_id,
+            params={"molecule": molecule}
+        )
+        pat_outputs = PatentOutputs.model_validate(pat_result_raw["outputs"])
+        print(f"[Conductor] Patents Found: {len(pat_outputs.patents)}")
+
+        # 4. Run Market Intelligence Worker
         print("[Conductor] Running Market Intelligence Worker...")
         market_task_id = str(uuid6.uuid7())
         market_result_raw = run_market_worker(
@@ -61,20 +75,21 @@ def run_research_workflow(job_id_str: str, molecule: str):
         )
         market_outputs = MarketIntelligenceOutputs.model_validate(market_result_raw["outputs"])
 
-        # 4. Run Synthesis (LLM)
+        # 5. Run Synthesis (LLM)
         print("[Conductor] Running Synthesis Engine...")
         canonical_result: CanonicalResult = run_synthesis(
             job_id=job_uuid,
             molecule=molecule,
             ct_outputs=ct_outputs,
+            pat_outputs=pat_outputs, # Pass Patent Data
             market_outputs=market_outputs
         )
         print(f"[Conductor] Synthesis Complete. Confidence: {canonical_result.confidence_overall}")
 
-        # 4. Save Synthesis Result to DB (so frontend can see text report)
+        # 6. Save Synthesis Result to DB
         _update_job_status(job_uuid, "generating_report", result=canonical_result.model_dump())
 
-        # 5. Run Report Worker (PDF/PPT)
+        # 7. Run Report Worker
         print("[Conductor] Generating PDF/PPT artifacts...")
         rep_task_id = str(uuid6.uuid7())
         rep_result_raw = run_report_worker(
@@ -84,7 +99,7 @@ def run_research_workflow(job_id_str: str, molecule: str):
         )
         print("[Conductor] Report Generation Complete.")
 
-        # 6. Final Completion
+        # 8. Final Completion
         _update_job_status(job_uuid, "completed")
         print(f"[Conductor] Job {job_id_str} Finished Successfully.")
 
