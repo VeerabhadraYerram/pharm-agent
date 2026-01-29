@@ -9,6 +9,7 @@ This prototype demonstrates an end-to-end workflow: from analyzing clinical tria
 ## Key Features
 
 *   **Clinical Trials Analysis**: Automated ingestion and analysis of clinical trial data (e.g., from ClinicalTrials.gov) to identify study designs, patient cohorts, and outcomes.
+*   **Patent & IP Analysis**: Discovery of relevant patents and intellectual property filings to assess the competitive landscape and synthesis exclusivity.
 *   **Intelligent Synthesis**: Uses multi-agent orchestration to synthesize disparate information into coherent medical insights.
 *   **Automated Reporting**: Generates structured reports in PDF format, summarizing key findings, methodology, and conclusions.
 *   **Interactive Dashboard**: A modern React-based user interface for initiating research jobs and viewing real-time status and results.
